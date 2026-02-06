@@ -41,3 +41,43 @@
     earned-royalties: uint,
   }
 )
+
+;; Contract State Variables
+(define-data-var total-registered-tracks uint u0)
+(define-data-var contract-owner principal tx-sender)
+
+;; Validation Helpers
+(define-private (is-valid-royalty-share (share {
+  percentage: uint,
+  role: (string-ascii 20),
+  earned-royalties: uint,
+}))
+  (> (get percentage share) u0)
+)
+
+(define-private (is-contract-owner)
+  (is-eq tx-sender (var-get contract-owner))
+)
+
+(define-private (validate-royalty-percentage (percentage uint))
+  (and (>= percentage u0) (<= percentage u100))
+)
+
+(define-private (validate-ascii-string (input (string-ascii 50)))
+  (let ((length (len input)))
+    (and (> length u0) (<= length u50))
+  )
+)
+
+(define-private (validate-participant-role (role (string-ascii 20)))
+  (let ((length (len role)))
+    (and (> length u0) (<= length u20))
+  )
+)
+
+(define-private (validate-rights-holder (holder principal))
+  (and
+    (not (is-eq holder tx-sender))
+    (not (is-eq holder (var-get contract-owner)))
+  )
+)
