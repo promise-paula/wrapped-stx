@@ -120,3 +120,40 @@
     )
   )
 )
+
+;; Royalty Distribution Mechanism
+(define-private (calculate-rights-holder-payment
+    (rights-share {
+      rights-holder: principal,
+      percentage: uint,
+    })
+    (total-payment uint)
+  )
+  (let ((holder-payment (/ (* total-payment (get percentage rights-share)) u100)))
+    (if (> holder-payment u0)
+      (match (stx-transfer? holder-payment tx-sender (get rights-holder rights-share))
+        success total-payment
+        error u0
+      )
+      u0
+    )
+  )
+)
+
+(define-private (distribute-royalties
+    (song-id uint)
+    (total-payment uint)
+  )
+  (let (
+      (royalty-distribution-list (get-track-royalty-shares song-id))
+      (total-distributed (fold calculate-rights-holder-payment royalty-distribution-list
+        total-payment
+      ))
+    )
+    (begin
+      (asserts! (> (len royalty-distribution-list) u0) ERR-SONG-NOT-FOUND)
+      (asserts! (> total-distributed u0) ERR-PAYMENT-DISTRIBUTION-FAILED)
+      (ok total-distributed)
+    )
+  )
+)
