@@ -1,12 +1,12 @@
 [project]
-name = 'yield-farm'
+name = 'wrapped-stx'
 description = ''
 authors = []
 telemetry = true
 cache_dir = './.cache'
 requirements = []
-[contracts.yield-farm]
-path = 'contracts/yield-farm.clar'
+[contracts.wrapped-stx]
+path = 'contracts/wrapped-stx.clar'
 clarity_version = 4
 epoch = 'latest'
 [repl.analysis]
