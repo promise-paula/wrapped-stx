@@ -211,3 +211,55 @@
     )
   )
 )
+
+(define-public (process-royalty-payment
+    (song-id uint)
+    (payment-amount uint)
+  )
+  (let ((track-record (get-track-details song-id)))
+    (begin
+      (asserts! (is-some track-record) ERR-SONG-NOT-FOUND)
+      (asserts! (>= (stx-get-balance tx-sender) payment-amount)
+        ERR-INSUFFICIENT-PAYMENT
+      )
+
+      (try! (distribute-royalties song-id payment-amount))
+      (map-set music-catalog { song-id: song-id }
+        (merge (unwrap-panic track-record) { total-revenue: (+ (get total-revenue (unwrap-panic track-record)) payment-amount) })
+      )
+      (ok true)
+    )
+  )
+)
+
+(define-public (update-track-status
+    (song-id uint)
+    (is-active bool)
+  )
+  (let ((track-record (get-track-details song-id)))
+    (begin
+      (asserts! (is-contract-owner) ERR-UNAUTHORIZED-ACCESS)
+      (asserts! (is-some track-record) ERR-SONG-NOT-FOUND)
+
+      (map-set music-catalog { song-id: song-id }
+        (merge (unwrap-panic track-record) { is-active: is-active })
+      )
+      (ok true)
+    )
+  )
+)
+
+(define-public (transfer-ownership (new-owner principal))
+  (begin
+    (asserts! (is-contract-owner) ERR-UNAUTHORIZED-ACCESS)
+    (asserts! (validate-rights-holder new-owner) ERR-INVALID-ADMIN)
+
+    (var-set contract-owner new-owner)
+    (ok true)
+  )
+)
+
+;; Contract Initialization
+(begin
+  (var-set total-registered-tracks u0)
+)
