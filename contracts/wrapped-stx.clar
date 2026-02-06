@@ -157,3 +157,57 @@
     )
   )
 )
+
+;; Administrative Functions
+(define-public (register-track
+    (track-title (string-ascii 50))
+    (primary-artist principal)
+  )
+  (let ((new-track-id (+ (var-get total-registered-tracks) u1)))
+    (begin
+      (asserts! (is-contract-owner) ERR-UNAUTHORIZED-ACCESS)
+      (asserts! (validate-ascii-string track-title) ERR-INVALID-SONG-TITLE)
+      (asserts! (validate-rights-holder primary-artist) ERR-INVALID-ARTIST)
+
+      (map-set music-catalog { song-id: new-track-id } {
+        title: track-title,
+        primary-artist: primary-artist,
+        total-revenue: u0,
+        release-date: stacks-block-height,
+        is-active: true,
+      })
+      (var-set total-registered-tracks new-track-id)
+      (ok new-track-id)
+    )
+  )
+)
+
+(define-public (set-royalty-allocation
+    (song-id uint)
+    (rights-holder principal)
+    (percentage uint)
+    (participant-role (string-ascii 20))
+  )
+  (let ((track-record (get-track-details song-id)))
+    (begin
+      (asserts! (is-some track-record) ERR-SONG-NOT-FOUND)
+      (asserts! (validate-royalty-percentage percentage)
+        ERR-INVALID-ROYALTY-PERCENTAGE
+      )
+      (asserts! (validate-participant-role participant-role)
+        ERR-INVALID-PARTICIPANT-ROLE
+      )
+      (asserts! (validate-rights-holder rights-holder) ERR-INVALID-RECIPIENT)
+
+      (map-set royalty-allocations {
+        song-id: song-id,
+        rights-holder: rights-holder,
+      } {
+        percentage: percentage,
+        role: participant-role,
+        earned-royalties: u0,
+      })
+      (ok true)
+    )
+  )
+)
