@@ -1,5 +1,5 @@
 {
-  "name": "yield-farm-tests",
+  "name": "wrapped-stx-tests",
   "version": "1.0.0",
   "description": "Run unit tests on this project.",
   "type": "module",
