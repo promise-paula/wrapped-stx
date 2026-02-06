@@ -81,3 +81,42 @@
     (not (is-eq holder (var-get contract-owner)))
   )
 )
+
+;; Read-Only Query Functions
+(define-read-only (get-track-details (song-id uint))
+  (map-get? music-catalog { song-id: song-id })
+)
+
+(define-read-only (get-royalty-details
+    (song-id uint)
+    (rights-holder principal)
+  )
+  (map-get? royalty-allocations {
+    song-id: song-id,
+    rights-holder: rights-holder,
+  })
+)
+
+(define-read-only (get-total-tracks)
+  (var-get total-registered-tracks)
+)
+
+(define-read-only (get-track-royalty-shares (song-id uint))
+  (let (
+      (track-info (get-track-details song-id))
+      (primary-artist (match track-info
+        record (get primary-artist record)
+        tx-sender
+      ))
+    )
+    (let ((distribution (get-royalty-details song-id primary-artist)))
+      (match distribution
+        share (list {
+          rights-holder: primary-artist,
+          percentage: (get percentage share),
+        })
+        (list)
+      )
+    )
+  )
+)
